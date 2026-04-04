@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Manuscrip MVP</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="container">
+      <header>
+        <h1>Manuscrip MVP</h1>
+        <p>Sube un manuscrito y obtén un primer análisis estructural por capítulos.</p>
+      </header>
+
+      <section class="card">
+        <h2>Paso 1: Subir manuscrito</h2>
+        <form id="uploadForm">
+          <div class="grid">
+            <label>
+              Título del libro
+              <input type="text" name="title" placeholder="El último faro" />
+            </label>
+            <label>
+              Género
+              <input type="text" name="genre" placeholder="Fantasía, thriller, romance..." />
+            </label>
+            <label>
+              Público objetivo
+              <input type="text" name="audience" placeholder="Adulto, YA, infantil..." />
+            </label>
+          </div>
+
+          <label>
+            Objetivo del análisis
+            <textarea
+              name="goals"
+              rows="3"
+              placeholder="Ej: mejorar ritmo y coherencia de personajes"
+            ></textarea>
+          </label>
+
+          <label>
+            Archivo de manuscrito (DOCX, TXT o PDF)
+            <input type="file" name="manuscript" accept=".docx,.txt,.pdf" required />
+          </label>
+
+          <button id="uploadBtn" type="submit">Procesar manuscrito</button>
+          <p id="uploadStatus" class="status"></p>
+        </form>
+      </section>
+
+      <section class="card" id="latestCard" hidden>
+        <h2>Resultado del último procesamiento</h2>
+        <div id="latestResult"></div>
+      </section>
+
+      <section class="card">
+        <h2>Paso 2: Versiones cargadas</h2>
+        <button id="refreshBtn" type="button">Actualizar listado</button>
+        <p id="listStatus" class="status"></p>
+        <div id="manuscriptsList"></div>
+      </section>
+
+      <section class="card" id="manuscripDashboard" hidden>
+        <h2>Informe Manuscrip (según propuesta de producto)</h2>
+        <p class="muted">
+          Por defecto usa el modo <strong>económico</strong> (NLP local + <strong>1 sola llamada</strong> a la API).
+          El modo completo repite muchas llamadas por módulo y por capítulo: solo si lo necesitas.
+        </p>
+        <div id="dashboardTabs" class="tab-row"></div>
+        <div id="dashboardBody" class="tab-body"></div>
+      </section>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>
