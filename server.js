@@ -28,6 +28,7 @@ const {
 
 const app = express();
 const port = process.env.PORT || 3000;
+const publicDir = path.join(__dirname, "public");
 const anthropicApiKey = process.env.ANTHROPIC_API_KEY?.trim();
 const anthropicModel =
   process.env.ANTHROPIC_MODEL || "claude-sonnet-4-6";
@@ -35,7 +36,11 @@ const manuscripMode = (process.env.MANUSCRIP_MODE || "eco").toLowerCase();
 const upload = multer({ storage: multer.memoryStorage() });
 
 app.use(express.json({ limit: "2mb" }));
-app.use(express.static("public"));
+// Vercel ignora express.static: los archivos en public/ salen por CDN; la raíz la cubrimos aquí.
+app.get("/", (req, res) => {
+  res.sendFile(path.join(publicDir, "index.html"));
+});
+app.use(express.static(publicDir));
 
 async function requireUserOrDefault(req, res) {
   const userId = await resolveUserId(req);
@@ -743,13 +748,17 @@ app.post("/api/manuscripts/:id/analyze-manuscrip", async (req, res) => {
   }
 });
 
-const server = app.listen(port, () => {
-  console.log(`Book Evaluator running on http://localhost:${port}`);
-});
-server.timeout = 0;
-if (typeof server.requestTimeout !== "undefined") {
-  server.requestTimeout = 0;
-}
-if (typeof server.headersTimeout !== "undefined") {
-  server.headersTimeout = 0;
+module.exports = app;
+
+if (require.main === module) {
+  const server = app.listen(port, () => {
+    console.log(`Book Evaluator running on http://localhost:${port}`);
+  });
+  server.timeout = 0;
+  if (typeof server.requestTimeout !== "undefined") {
+    server.requestTimeout = 0;
+  }
+  if (typeof server.headersTimeout !== "undefined") {
+    server.headersTimeout = 0;
+  }
 }
