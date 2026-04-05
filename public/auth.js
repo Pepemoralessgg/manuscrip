@@ -1,4 +1,4 @@
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
+import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.1/+esm";
 
 const authStatus = document.getElementById("authStatus");
 const authSuccess = document.getElementById("authSuccess");
@@ -23,7 +23,7 @@ function showSessionOk(message) {
   setStatus("", false);
 }
 
-function requireSupabase() {
+function ensureSupabaseClient() {
   if (!supabase) {
     setStatus(
       "Supabase no está listo. Comprueba que el servidor expone /api/public-config y las variables NEXT_PUBLIC_SUPABASE_*.",
@@ -49,7 +49,7 @@ document.querySelectorAll(".auth-tab").forEach((btn) => {
 
 loginForm.addEventListener("submit", async (e) => {
   e.preventDefault();
-  if (!requireSupabase()) return;
+  if (!ensureSupabaseClient()) return;
   const fd = new FormData(loginForm);
   const email = String(fd.get("email") || "").trim();
   const password = String(fd.get("password") || "");
@@ -70,7 +70,7 @@ loginForm.addEventListener("submit", async (e) => {
 
 registerForm.addEventListener("submit", async (e) => {
   e.preventDefault();
-  if (!requireSupabase()) return;
+  if (!ensureSupabaseClient()) return;
   const fd = new FormData(registerForm);
   const email = String(fd.get("email") || "").trim();
   const password = String(fd.get("password") || "");
