@@ -17,59 +17,61 @@
       </header>
 
       <div class="card auth-card">
-        <div class="auth-tabs" role="tablist">
-          <button type="button" class="auth-tab active" data-panel="login" id="tab-login">
-            Iniciar sesión
-          </button>
-          <button type="button" class="auth-tab" data-panel="register" id="tab-register">
-            Crear cuenta
-          </button>
-        </div>
+        <!-- Pestañas sin JS: radios + label (funciona aunque CSP bloquee inline o falle auth.js) -->
+        <div class="auth-switch">
+          <input type="radio" name="authview" id="auth-v-login" class="auth-view-radio" checked />
+          <input type="radio" name="authview" id="auth-v-register" class="auth-view-radio" />
 
-        <div id="panel-login" class="auth-panel active">
-          <h2 class="auth-panel-title">Iniciar sesión</h2>
-          <form id="loginForm">
-            <label>
-              Email
-              <input type="email" name="email" autocomplete="email" required />
-            </label>
-            <label>
-              Contraseña
-              <input type="password" name="password" autocomplete="current-password" required />
-            </label>
-            <button type="submit" id="loginSubmit">Entrar</button>
-          </form>
-        </div>
+          <div class="auth-tabs" role="tablist">
+            <label for="auth-v-login" class="auth-tab-label" id="tab-login">Iniciar sesión</label>
+            <label for="auth-v-register" class="auth-tab-label" id="tab-register">Crear cuenta</label>
+          </div>
 
-        <div id="panel-register" class="auth-panel" hidden>
-          <h2 class="auth-panel-title">Crear cuenta</h2>
-          <form id="registerForm">
-            <label>
-              Email
-              <input type="email" name="email" autocomplete="email" required />
-            </label>
-            <label>
-              Contraseña
-              <input
-                type="password"
-                name="password"
-                autocomplete="new-password"
-                required
-                minlength="6"
-              />
-            </label>
-            <label>
-              Repetir contraseña
-              <input
-                type="password"
-                name="password2"
-                autocomplete="new-password"
-                required
-                minlength="6"
-              />
-            </label>
-            <button type="submit" id="registerSubmit">Registrarme</button>
-          </form>
+          <div class="auth-panel-c login-panel-c" id="panel-login">
+            <h2 class="auth-panel-title">Iniciar sesión</h2>
+            <form id="loginForm">
+              <label>
+                Email
+                <input type="email" name="email" autocomplete="email" required />
+              </label>
+              <label>
+                Contraseña
+                <input type="password" name="password" autocomplete="current-password" required />
+              </label>
+              <button type="submit" id="loginSubmit">Entrar</button>
+            </form>
+          </div>
+
+          <div class="auth-panel-c register-panel-c" id="panel-register">
+            <h2 class="auth-panel-title">Crear cuenta</h2>
+            <form id="registerForm">
+              <label>
+                Email
+                <input type="email" name="email" autocomplete="email" required />
+              </label>
+              <label>
+                Contraseña
+                <input
+                  type="password"
+                  name="password"
+                  autocomplete="new-password"
+                  required
+                  minlength="6"
+                />
+              </label>
+              <label>
+                Repetir contraseña
+                <input
+                  type="password"
+                  name="password2"
+                  autocomplete="new-password"
+                  required
+                  minlength="6"
+                />
+              </label>
+              <button type="submit" id="registerSubmit">Registrarme</button>
+            </form>
+          </div>
         </div>
 
         <p id="authStatus" class="status auth-status" aria-live="polite"></p>

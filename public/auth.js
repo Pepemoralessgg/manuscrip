@@ -1,14 +1,10 @@
-import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.1/+esm";
-
 const authStatus = document.getElementById("authStatus");
 const authSuccess = document.getElementById("authSuccess");
 const authContinueWrap = document.getElementById("authContinueWrap");
 const loginForm = document.getElementById("loginForm");
 const registerForm = document.getElementById("registerForm");
-const panelLogin = document.getElementById("panel-login");
-const panelRegister = document.getElementById("panel-register");
 
-/** Se asigna en init(); los formularios deben poder enlazarse aunque init falle a medias. */
+/** Se asigna en init() tras import() dinámico de @supabase/supabase-js */
 let supabase = null;
 
 function setStatus(msg, isError) {
@@ -33,19 +29,6 @@ function ensureSupabaseClient() {
   }
   return true;
 }
-
-document.querySelectorAll(".auth-tab").forEach((btn) => {
-  btn.addEventListener("click", () => {
-    const panel = btn.dataset.panel;
-    document.querySelectorAll(".auth-tab").forEach((b) => b.classList.remove("active"));
-    btn.classList.add("active");
-    panelLogin.hidden = panel !== "login";
-    panelRegister.hidden = panel !== "register";
-    panelLogin.classList.toggle("active", panel === "login");
-    panelRegister.classList.toggle("active", panel === "register");
-    setStatus("");
-  });
-});
 
 loginForm.addEventListener("submit", async (e) => {
   e.preventDefault();
@@ -106,6 +89,21 @@ registerForm.addEventListener("submit", async (e) => {
 });
 
 async function init() {
+  let createClient;
+  try {
+    const mod = await import(
+      "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.1/+esm"
+    );
+    createClient = mod.createClient;
+  } catch (err) {
+    setStatus(
+      "No se pudo cargar Supabase en el navegador: " +
+        (err && err.message ? err.message : String(err)),
+      true
+    );
+    return;
+  }
+
   let res;
   try {
     res = await fetch("/api/public-config");
