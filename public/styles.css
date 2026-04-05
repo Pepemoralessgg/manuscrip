@@ -218,3 +218,70 @@ a.pdf-link {
   overflow: auto;
   max-height: 420px;
 }
+
+.header-links a {
+  color: #3b5cff;
+  font-weight: 600;
+}
+
+.auth-page .auth-card {
+  max-width: 420px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.auth-tabs {
+  display: flex;
+  gap: 0;
+  margin: -0.25rem -0.25rem 1rem;
+  border-bottom: 1px solid #e4e9f1;
+}
+
+.auth-tab {
+  flex: 1;
+  width: auto;
+  margin: 0;
+  padding: 0.65rem 0.75rem;
+  background: transparent;
+  color: #4f5b6a;
+  font-weight: 700;
+  border-radius: 0;
+  border-bottom: 3px solid transparent;
+}
+
+.auth-tab:hover {
+  background: #f4f6fb;
+  color: #1a2744;
+}
+
+.auth-tab.active {
+  color: #3b5cff;
+  border-bottom-color: #3b5cff;
+  background: #f8faff;
+}
+
+.auth-panel {
+  display: none;
+}
+
+.auth-panel.active {
+  display: block;
+}
+
+.auth-panel-title {
+  margin: 0 0 0.75rem;
+  font-size: 1.1rem;
+}
+
+.auth-status-error {
+  color: #b42318;
+}
+
+.auth-success {
+  margin-top: 0.75rem;
+}
+
+.auth-continue-link {
+  font-weight: 700;
+  color: #3b5cff;
+}

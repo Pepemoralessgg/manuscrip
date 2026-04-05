@@ -42,6 +42,27 @@ app.get("/", (req, res) => {
 });
 app.use(express.static(publicDir));
 
+/** Solo datos públicos del proyecto Supabase (la anon key está pensada para el navegador con RLS). */
+app.get("/api/public-config", (req, res) => {
+  const supabaseUrl = (
+    process.env.NEXT_PUBLIC_SUPABASE_URL ||
+    process.env.SUPABASE_URL ||
+    ""
+  ).trim();
+  const supabaseAnonKey = (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "").trim();
+  if (!supabaseUrl || !supabaseAnonKey) {
+    return res.status(503).json({
+      error:
+        "Faltan NEXT_PUBLIC_SUPABASE_URL (o SUPABASE_URL) y/o NEXT_PUBLIC_SUPABASE_ANON_KEY en el servidor."
+    });
+  }
+  res.json({ supabaseUrl, supabaseAnonKey });
+});
+
+app.get("/auth", (req, res) => {
+  res.sendFile(path.join(publicDir, "auth.html"));
+});
+
 async function requireUserOrDefault(req, res) {
   const userId = await resolveUserId(req);
   if (!userId) {

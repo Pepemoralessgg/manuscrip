@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Acceso · Manuscrip MVP</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="container auth-page">
+      <header>
+        <h1>Acceso a Manuscrip</h1>
+        <p class="muted">Inicia sesión o crea una cuenta con email y contraseña (Supabase Auth).</p>
+        <p class="header-links">
+          <a href="/">← Volver a la app</a>
+        </p>
+      </header>
+
+      <div class="card auth-card">
+        <div class="auth-tabs" role="tablist">
+          <button type="button" class="auth-tab active" data-panel="login" id="tab-login">
+            Iniciar sesión
+          </button>
+          <button type="button" class="auth-tab" data-panel="register" id="tab-register">
+            Crear cuenta
+          </button>
+        </div>
+
+        <div id="panel-login" class="auth-panel active">
+          <h2 class="auth-panel-title">Iniciar sesión</h2>
+          <form id="loginForm">
+            <label>
+              Email
+              <input type="email" name="email" autocomplete="email" required />
+            </label>
+            <label>
+              Contraseña
+              <input type="password" name="password" autocomplete="current-password" required />
+            </label>
+            <button type="submit" id="loginSubmit">Entrar</button>
+          </form>
+        </div>
+
+        <div id="panel-register" class="auth-panel" hidden>
+          <h2 class="auth-panel-title">Crear cuenta</h2>
+          <form id="registerForm">
+            <label>
+              Email
+              <input type="email" name="email" autocomplete="email" required />
+            </label>
+            <label>
+              Contraseña
+              <input
+                type="password"
+                name="password"
+                autocomplete="new-password"
+                required
+                minlength="6"
+              />
+            </label>
+            <label>
+              Repetir contraseña
+              <input
+                type="password"
+                name="password2"
+                autocomplete="new-password"
+                required
+                minlength="6"
+              />
+            </label>
+            <button type="submit" id="registerSubmit">Registrarme</button>
+          </form>
+        </div>
+
+        <p id="authStatus" class="status auth-status" aria-live="polite"></p>
+        <p id="authSuccess" class="auth-success muted" hidden></p>
+        <p class="auth-after-login" hidden id="authContinueWrap">
+          <a href="/" class="auth-continue-link">Continuar a la app →</a>
+        </p>
+      </div>
+    </main>
+
+    <script type="module" src="auth.js"></script>
+  </body>
+</html>
