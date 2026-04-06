@@ -1,3 +1,5 @@
+import { apiFetch, signOut, getSupabaseBrowser } from "./supabase-browser.js";
+
 const uploadForm = document.getElementById("uploadForm");
 const uploadBtn = document.getElementById("uploadBtn");
 const uploadStatus = document.getElementById("uploadStatus");
@@ -10,6 +12,33 @@ const manuscripDashboard = document.getElementById("manuscripDashboard");
 const dashboardTabs = document.getElementById("dashboardTabs");
 const dashboardBody = document.getElementById("dashboardBody");
 let isAnalyzing = false;
+
+async function downloadPdf(manuscriptId) {
+  try {
+    const res = await apiFetch(`/api/manuscripts/${encodeURIComponent(manuscriptId)}/pdf`);
+    if (!res.ok) {
+      listStatus.textContent = "No se pudo descargar el PDF. ¿Sesión caducada? Vuelve a iniciar sesión.";
+      return;
+    }
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `manuscrip-${String(manuscriptId).slice(0, 8)}.pdf`;
+    a.click();
+    URL.revokeObjectURL(url);
+  } catch (err) {
+    listStatus.textContent = `Error al descargar PDF: ${err.message}`;
+  }
+}
+
+document.addEventListener("click", (e) => {
+  const a = e.target.closest("a.pdf-link");
+  if (a && a.dataset.id) {
+    e.preventDefault();
+    downloadPdf(a.dataset.id);
+  }
+});
 
 function escapeHtml(value) {
   return String(value ?? "")
@@ -83,7 +112,7 @@ function renderManuscriptList(items) {
         </div>
         ${
           m.hasManuscripBundle
-            ? `<a class="pdf-link" href="/api/manuscripts/${encodeURIComponent(m.id)}/pdf" download>Descargar PDF</a>`
+            ? `<a href="#" class="pdf-link" data-id="${escapeHtml(m.id)}">Descargar PDF</a>`
             : ""
         }
       </article>
@@ -175,7 +204,7 @@ function renderManuscripDashboard(m) {
         ? `<p><strong>Score global IA:</strong> ${la.dimensions.overallScore}/100 (Ritmo ${la.dimensions.ritmoScore}, Claridad ${la.dimensions.claridadScore}, Estructura ${la.dimensions.estructuraScore})</p>`
         : "<p>Sin análisis por capítulo todavía.</p>"
     }
-    <p><a class="pdf-link" href="/api/manuscripts/${encodeURIComponent(m.id)}/pdf" download>Descargar informe PDF</a></p>
+    <p><a href="#" class="pdf-link" data-id="${escapeHtml(m.id)}">Descargar informe PDF</a></p>
   `;
 
   const nlpHtml = nlp
@@ -305,7 +334,7 @@ async function loadManuscripts(options = {}) {
     listStatus.textContent = "Cargando manuscritos...";
   }
   try {
-    const response = await fetch("/api/manuscripts");
+    const response = await apiFetch("/api/manuscripts");
     let data;
     try {
       data = await response.json();
@@ -339,7 +368,7 @@ uploadForm.addEventListener("submit", async (event) => {
   uploadStatus.textContent = "Procesando manuscrito...";
 
   try {
-    const response = await fetch("/api/manuscripts/upload", {
+    const response = await apiFetch("/api/manuscripts/upload", {
       method: "POST",
       body: formData
     });
@@ -389,7 +418,7 @@ manuscriptsList.addEventListener("click", async (event) => {
       const url = fullMode
         ? `/api/manuscripts/${encodeURIComponent(manuscriptId)}/analyze-manuscrip?mode=full`
         : `/api/manuscripts/${encodeURIComponent(manuscriptId)}/analyze-manuscrip`;
-      const response = await fetch(url, {
+      const response = await apiFetch(url, {
         method: "POST",
         headers: { Accept: "application/json", "Content-Type": "application/json" },
         body: JSON.stringify({})
@@ -408,7 +437,7 @@ manuscriptsList.addEventListener("click", async (event) => {
         return;
       }
 
-      const fullRes = await fetch(`/api/manuscripts/${encodeURIComponent(manuscriptId)}/full`);
+      const fullRes = await apiFetch(`/api/manuscripts/${encodeURIComponent(manuscriptId)}/full`);
       const full = await fullRes.json();
       if (!fullRes.ok) {
         listStatus.textContent = full.error || "No se pudo cargar el informe completo.";
@@ -441,7 +470,7 @@ manuscriptsList.addEventListener("click", async (event) => {
     "Analizando con IA… puede tardar varios minutos. No cierres esta pestaña.";
 
   try {
-    const response = await fetch(`/api/manuscripts/${encodeURIComponent(manuscriptId)}/analyze`, {
+    const response = await apiFetch(`/api/manuscripts/${encodeURIComponent(manuscriptId)}/analyze`, {
       method: "POST",
       headers: { Accept: "application/json" }
     });
@@ -469,4 +498,31 @@ manuscriptsList.addEventListener("click", async (event) => {
   }
 });
 
-loadManuscripts();
+async function boot() {
+  try {
+    const sb = await getSupabaseBrowser();
+    const {
+      data: { session }
+    } = await sb.auth.getSession();
+    if (!session) {
+      window.location.replace("/auth");
+      return;
+    }
+    document.body.classList.remove("auth-checking");
+    const userBar = document.getElementById("userBar");
+    if (userBar) {
+      userBar.innerHTML = `<span class="user-email">${escapeHtml(session.user.email)}</span>
+        <button type="button" class="btn-logout" id="logoutBtn">Cerrar sesión</button>`;
+      document.getElementById("logoutBtn").addEventListener("click", async () => {
+        await signOut();
+        window.location.href = "/auth";
+      });
+    }
+  } catch (e) {
+    window.location.replace("/auth");
+    return;
+  }
+  await loadManuscripts();
+}
+
+boot();

@@ -9,6 +9,105 @@ body {
   color: #1a1a1a;
 }
 
+body.page-app {
+  font-family: "Source Sans 3", system-ui, -apple-system, sans-serif;
+  background: linear-gradient(180deg, #faf7f2 0%, #efe9e1 100%);
+  color: #1e1a17;
+}
+
+body.page-app h1,
+body.page-app h2,
+body.page-app h3,
+body.page-app .auth-panel-title {
+  font-family: "Crimson Pro", Georgia, "Times New Roman", serif;
+  font-weight: 600;
+}
+
+body.auth-checking .app-shell {
+  opacity: 0;
+  pointer-events: none;
+}
+
+body.page-app:not(.auth-checking) .app-shell {
+  opacity: 1;
+  transition: opacity 0.22s ease;
+}
+
+.app-header {
+  margin-bottom: 1.25rem;
+}
+
+.header-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.app-header h1 {
+  margin: 0 0 0.25rem;
+  font-size: 2rem;
+  letter-spacing: -0.02em;
+}
+
+.tagline {
+  margin: 0;
+  color: #4a433c;
+  font-size: 1.05rem;
+  line-height: 1.45;
+  max-width: 42rem;
+}
+
+.flow-hint {
+  margin: 0.75rem 0 0;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.inline-link {
+  color: #6b4f3a;
+  font-weight: 600;
+}
+
+.user-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.9rem;
+}
+
+.user-email {
+  color: #4a433c;
+  max-width: 14rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.btn-logout {
+  width: auto;
+  margin: 0;
+  padding: 0.45rem 0.75rem;
+  font-size: 0.85rem;
+  background: #5c4d42;
+  color: #fff;
+}
+
+.btn-logout:hover {
+  background: #3d342c;
+}
+
+.card-elevated {
+  box-shadow: 0 12px 40px rgba(44, 36, 28, 0.08);
+  border: 1px solid rgba(92, 77, 66, 0.08);
+}
+
+.small-print {
+  font-size: 0.9rem;
+  margin: 0 0 0.75rem;
+}
+
 .container {
   max-width: 960px;
   margin: 2rem auto;

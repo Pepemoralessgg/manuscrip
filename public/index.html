@@ -3,21 +3,44 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Manuscrip MVP</title>
+    <meta
+      name="description"
+      content="Manuscrip: análisis y evaluación de manuscritos con IA — feedback estructurado para escritores."
+    />
+    <title>Manuscrip</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,500;0,600;1,400&family=Source+Sans+3:wght@400;600;700&display=swap"
+      rel="stylesheet"
+    />
     <link rel="stylesheet" href="styles.css" />
   </head>
-  <body>
-    <main class="container">
-      <header>
-        <h1>Manuscrip MVP</h1>
-        <p>Sube un manuscrito y obtén un primer análisis estructural por capítulos.</p>
-        <p class="muted header-links">
-          <a href="/auth">Iniciar sesión / Registrarse</a>
+  <body class="auth-checking page-app">
+    <main class="container app-shell">
+      <header class="app-header">
+        <div class="header-top">
+          <div>
+            <h1>Manuscrip</h1>
+            <p class="tagline">
+              Co‑editorial con datos: legibilidad, ritmo, personajes e informe exportable — alineado con tu
+              manuscrito en español.
+            </p>
+          </div>
+          <div id="userBar" class="user-bar" aria-live="polite"></div>
+        </div>
+        <p class="muted flow-hint">
+          <strong>Flujo:</strong> 1) Subir y contexto · 2) Análisis (puede tardar) · 3) Dashboard e informe PDF ·
+          4) Iterar entre versiones.
+          <a class="inline-link" href="/auth">Cuenta / acceso</a>
         </p>
       </header>
 
-      <section class="card">
-        <h2>Paso 1: Subir manuscrito</h2>
+      <section class="card card-elevated">
+        <h2>Paso 1 — Manuscrito y contexto</h2>
+        <p class="muted small-print">
+          Género y público personalizan el tono del informe y el benchmark (propuesta de producto v1).
+        </p>
         <form id="uploadForm">
           <div class="grid">
             <label>
@@ -26,11 +49,11 @@
             </label>
             <label>
               Género
-              <input type="text" name="genre" placeholder="Fantasía, thriller, romance..." />
+              <input type="text" name="genre" placeholder="Thriller, romance, no ficción…" />
             </label>
             <label>
               Público objetivo
-              <input type="text" name="audience" placeholder="Adulto, YA, infantil..." />
+              <input type="text" name="audience" placeholder="Adulto, YA, infantil…" />
             </label>
           </div>
 
@@ -39,12 +62,12 @@
             <textarea
               name="goals"
               rows="3"
-              placeholder="Ej: mejorar ritmo y coherencia de personajes"
+              placeholder="Ej.: mejorar ritmo antes de autopublicar · preparar envío a agencias · feedback rápido"
             ></textarea>
           </label>
 
           <label>
-            Archivo de manuscrito (DOCX, TXT o PDF)
+            Archivo (DOCX, TXT o PDF)
             <input type="file" name="manuscript" accept=".docx,.txt,.pdf" required />
           </label>
 
@@ -54,28 +77,29 @@
       </section>
 
       <section class="card" id="latestCard" hidden>
-        <h2>Resultado del último procesamiento</h2>
+        <h2>Último procesamiento</h2>
         <div id="latestResult"></div>
       </section>
 
       <section class="card">
-        <h2>Paso 2: Versiones cargadas</h2>
+        <h2>Tus versiones</h2>
         <button id="refreshBtn" type="button">Actualizar listado</button>
         <p id="listStatus" class="status"></p>
         <div id="manuscriptsList"></div>
       </section>
 
-      <section class="card" id="manuscripDashboard" hidden>
-        <h2>Informe Manuscrip (según propuesta de producto)</h2>
+      <section class="card manuscrip-report-card" id="manuscripDashboard" hidden>
+        <h2>Informe Manuscrip</h2>
         <p class="muted">
-          Por defecto usa el modo <strong>económico</strong> (NLP local + <strong>1 sola llamada</strong> a la API).
-          El modo completo repite muchas llamadas por módulo y por capítulo: solo si lo necesitas.
+          Capa 1 (NLP) + capa 2 (IA): estructura, personas, hook, sinopsis, inconsistencias y benchmark. Modo
+          <strong>económico</strong> = 1 llamada API + NLP local; modo <strong>completo</strong> = más profundidad
+          y coste.
         </p>
         <div id="dashboardTabs" class="tab-row"></div>
         <div id="dashboardBody" class="tab-body"></div>
       </section>
     </main>
 
-    <script src="app.js"></script>
+    <script type="module" src="app.js"></script>
   </body>
 </html>
