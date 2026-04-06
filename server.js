@@ -33,7 +33,10 @@ const anthropicApiKey = process.env.ANTHROPIC_API_KEY?.trim();
 const anthropicModel =
   process.env.ANTHROPIC_MODEL || "claude-sonnet-4-6";
 const manuscripMode = (process.env.MANUSCRIP_MODE || "eco").toLowerCase();
-const upload = multer({ storage: multer.memoryStorage() });
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 50 * 1024 * 1024 }
+});
 
 app.use(express.json({ limit: "2mb" }));
 // Vercel ignora express.static: los archivos en public/ salen por CDN; la raíz la cubrimos aquí.
@@ -546,9 +549,13 @@ app.post("/api/manuscripts/upload", upload.single("manuscript"), async (req, res
       manuscript: sanitizeManuscript(saved)
     });
   } catch (err) {
+    console.error("[upload]", err);
+    const detail =
+      err?.message ||
+      (typeof err === "object" && err !== null && "message" in err ? err.message : String(err));
     return res.status(500).json({
       error: "No se pudo procesar el manuscrito.",
-      details: err.message
+      details: detail
     });
   }
 });

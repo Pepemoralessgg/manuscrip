@@ -426,7 +426,15 @@ uploadForm.addEventListener("submit", async (event) => {
     });
     const data = await response.json();
     if (!response.ok) {
-      uploadStatus.textContent = data.error || "No se pudo procesar el manuscrito.";
+      const detail =
+        typeof data.details === "string"
+          ? data.details
+          : data.details != null
+            ? JSON.stringify(data.details)
+            : "";
+      uploadStatus.textContent = detail
+        ? `${data.error || "Error"} — ${detail}`
+        : data.error || "No se pudo procesar el manuscrito.";
       return;
     }
     renderLatest(data.manuscript);
