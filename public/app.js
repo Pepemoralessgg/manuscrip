@@ -1,4 +1,56 @@
-import { apiFetch, signOut, getSupabaseBrowser } from "./supabase-browser.js";
+/**
+ * Cliente Supabase y fetch con JWT — solo APIs del navegador (sin require / CommonJS).
+ */
+let __sbClientPromise = null;
+
+async function getSupabaseBrowser() {
+  if (__sbClientPromise) return __sbClientPromise;
+  __sbClientPromise = (async () => {
+    const res = await fetch("/api/public-config");
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      throw new Error(body.error || "No hay configuración de Supabase");
+    }
+    const { supabaseUrl, supabaseAnonKey } = body;
+    if (!supabaseUrl || !supabaseAnonKey) {
+      throw new Error("Configuración incompleta");
+    }
+    const { createClient } = await import(
+      "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.1/+esm"
+    );
+    return createClient(supabaseUrl, supabaseAnonKey, {
+      auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: true
+      }
+    });
+  })();
+  return __sbClientPromise;
+}
+
+async function authHeaders(extra = {}) {
+  const sb = await getSupabaseBrowser();
+  const {
+    data: { session }
+  } = await sb.auth.getSession();
+  const h = { Accept: "application/json", ...extra };
+  if (session?.access_token) {
+    h.Authorization = `Bearer ${session.access_token}`;
+  }
+  return h;
+}
+
+async function signOut() {
+  const sb = await getSupabaseBrowser();
+  await sb.auth.signOut();
+}
+
+async function apiFetch(url, options = {}) {
+  const { headers: extraHeaders, ...rest } = options;
+  const headers = await authHeaders(extraHeaders || {});
+  return fetch(url, { ...rest, headers });
+}
 
 const uploadForm = document.getElementById("uploadForm");
 const uploadBtn = document.getElementById("uploadBtn");
