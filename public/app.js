@@ -63,7 +63,14 @@ const manuscriptsList = document.getElementById("manuscriptsList");
 const manuscripDashboard = document.getElementById("manuscripDashboard");
 const dashboardTabs = document.getElementById("dashboardTabs");
 const dashboardBody = document.getElementById("dashboardBody");
+const compareA = document.getElementById("compareA");
+const compareB = document.getElementById("compareB");
+const compareBtn = document.getElementById("compareBtn");
+const compareResult = document.getElementById("compareResult");
+const dropZone = document.getElementById("dropZone");
+const goalPreset = document.getElementById("goalPreset");
 let isAnalyzing = false;
+let cachedManuscripts = [];
 
 async function downloadPdf(manuscriptId) {
   try {
@@ -91,6 +98,81 @@ document.addEventListener("click", (e) => {
     downloadPdf(a.dataset.id);
   }
 });
+
+function estimateChapterAnalysisMinutes(m) {
+  const ch = Math.max(1, m.chapterCount || 1);
+  return Math.min(5 + ch * 2, 90);
+}
+
+function estimateManuscripEcoMinutes(m) {
+  const w = m.wordCount || 0;
+  return Math.max(2, Math.min(25, 2 + Math.ceil(w / 40000)));
+}
+
+function refreshCompareSelects(items) {
+  cachedManuscripts = Array.isArray(items) ? items : [];
+  if (!compareA || !compareB) return;
+  const opts = (idSel) => {
+    const cur = idSel.value;
+    idSel.innerHTML =
+      `<option value="">— Elegir —</option>` +
+      cachedManuscripts
+        .map(
+          (m) =>
+            `<option value="${escapeHtml(m.id)}">${escapeHtml(m.title)} · ${m.wordCount} pal. · ${new Date(m.createdAt).toLocaleDateString()}</option>`
+        )
+        .join("");
+    if (cur && cachedManuscripts.some((m) => m.id === cur)) idSel.value = cur;
+  };
+  opts(compareA);
+  opts(compareB);
+}
+
+function renderCompareResult(c) {
+  if (!compareResult || !c) return;
+  const lines = [];
+  lines.push(
+    `<p><strong>${escapeHtml(c.a.title)}</strong> (${c.a.wordCount} palabras, ${c.a.chapterCount} cap.) ↔ <strong>${escapeHtml(c.b.title)}</strong> (${c.b.wordCount} palabras, ${c.b.chapterCount} cap.)</p>`
+  );
+  lines.push(
+    `<p><strong>Δ Palabras:</strong> ${c.summary.wordCountDelta >= 0 ? "+" : ""}${c.summary.wordCountDelta} · <strong>Δ Capítulos:</strong> ${c.summary.chapterCountDelta >= 0 ? "+" : ""}${c.summary.chapterCountDelta}</p>`
+  );
+  if (c.iaDimensions) {
+    const o = c.iaDimensions.overall;
+    const r = c.iaDimensions.ritmo;
+    const cl = c.iaDimensions.claridad;
+    const e = c.iaDimensions.estructura;
+    const fmtD = (d) => (d == null || Number.isNaN(Number(d)) ? "—" : `${d >= 0 ? "+" : ""}${d}`);
+    const t10 = (x) => (x == null ? "—" : x);
+    lines.push(`<h4 class="compare-h4">Scores IA (0–100, y equivalente /10)</h4>`);
+    lines.push(
+      `<ul class="compare-ul"><li><strong>Global:</strong> ${o.a ?? "—"} → ${o.b ?? "—"} (Δ ${fmtD(o.delta)}) · ~${t10(o.on10?.a)}/10 vs ~${t10(o.on10?.b)}/10</li>` +
+        `<li><strong>Ritmo:</strong> Δ ${fmtD(r.delta)}</li>` +
+        `<li><strong>Claridad:</strong> Δ ${fmtD(cl.delta)}</li>` +
+        `<li><strong>Estructura:</strong> Δ ${fmtD(e.delta)}</li></ul>`
+    );
+  } else {
+    lines.push(
+      `<p class="muted">No hay análisis “Solo capítulos (IA)” en <strong>ambas</strong> versiones. Ejecútalo en cada una para comparar scores.</p>`
+    );
+  }
+  if (c.nlp) {
+    const fd = c.nlp.fleschSzigrisztLike?.delta;
+    const fh = c.nlp.fillerHits?.delta;
+    const lr = c.nlp.longSentenceRatio?.delta;
+    const fmtN = (d, dec) =>
+      d == null || Number.isNaN(Number(d)) ? "—" : `${d >= 0 ? "+" : ""}${Number(d).toFixed(dec)}`;
+    lines.push(`<h4 class="compare-h4">NLP (legibilidad)</h4>`);
+    lines.push(
+      `<ul class="compare-ul"><li><strong>Flesch-Szigriszt (aprox.):</strong> Δ ${fmtN(fd, 2)}</li>` +
+        `<li><strong>Muletillas (aprox.):</strong> Δ ${fh == null || Number.isNaN(Number(fh)) ? "—" : `${fh >= 0 ? "+" : ""}${fh}`}</li>` +
+        `<li><strong>Ratio oraciones largas:</strong> Δ ${fmtN(lr, 3)}</li></ul>`
+    );
+  } else {
+    lines.push(`<p class="muted">NLP no disponible en una o ambas versiones (ejecuta Manuscrip económico o completo).</p>`);
+  }
+  compareResult.innerHTML = lines.join("");
+}
 
 function escapeHtml(value) {
   return String(value ?? "")
@@ -145,6 +227,7 @@ function renderManuscriptList(items) {
             ? `<p><strong>Informe Manuscrip:</strong> generado</p>`
             : "<p><strong>Informe Manuscrip:</strong> pendiente</p>"
         }
+        <p class="eta-line muted">Tiempos orientativos: capítulos (IA) ~${estimateChapterAnalysisMinutes(m)} min · Manuscrip eco ~${estimateManuscripEcoMinutes(m)} min · completo: variable (largo).</p>
         <div class="btn-row">
           <button type="button" class="analyze-btn" data-id="${escapeHtml(m.id)}" ${
             isAnalyzing ? "disabled" : ""
@@ -399,6 +482,7 @@ async function loadManuscripts(options = {}) {
       return;
     }
     renderManuscriptList(data);
+    refreshCompareSelects(data);
     if (!preserveStatusMessage) {
       listStatus.textContent = `Versiones cargadas: ${data.length}`;
     }
@@ -410,6 +494,11 @@ async function loadManuscripts(options = {}) {
 uploadForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   const formData = new FormData(uploadForm);
+  const preset = goalPreset?.value?.trim() || "";
+  const goalsText = String(formData.get("goals") || "").trim();
+  const combined = [preset, goalsText].filter(Boolean).join(" — ");
+  formData.set("goals", combined);
+
   const file = formData.get("manuscript");
   if (!file || !(file instanceof File) || !file.name) {
     uploadStatus.textContent = "Selecciona un archivo antes de continuar.";
@@ -448,6 +537,61 @@ uploadForm.addEventListener("submit", async (event) => {
 });
 
 refreshBtn.addEventListener("click", () => loadManuscripts());
+
+if (dropZone) {
+  const fileInput = uploadForm.querySelector('input[name="manuscript"]');
+  ["dragenter", "dragover"].forEach((ev) => {
+    dropZone.addEventListener(ev, (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      dropZone.classList.add("drop-zone-active");
+    });
+  });
+  ["dragleave", "drop"].forEach((ev) => {
+    dropZone.addEventListener(ev, (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (ev !== "drop") dropZone.classList.remove("drop-zone-active");
+    });
+  });
+  dropZone.addEventListener("drop", (e) => {
+    dropZone.classList.remove("drop-zone-active");
+    const f = e.dataTransfer?.files?.[0];
+    if (f && fileInput) {
+      const dt = new DataTransfer();
+      dt.items.add(f);
+      fileInput.files = dt.files;
+    }
+  });
+}
+
+if (compareBtn && compareResult) {
+  compareBtn.addEventListener("click", async () => {
+    const a = compareA?.value;
+    const b = compareB?.value;
+    if (!a || !b || a === b) {
+      compareResult.innerHTML =
+        "<p class=\"muted\">Elige dos manuscritos distintos (Versión A y Versión B).</p>";
+      return;
+    }
+    compareResult.textContent = "Comparando…";
+    try {
+      const res = await apiFetch(
+        `/api/manuscripts/compare?a=${encodeURIComponent(a)}&b=${encodeURIComponent(b)}`
+      );
+      const data = await res.json();
+      if (!res.ok) {
+        compareResult.textContent = data.details
+          ? `${data.error} — ${data.details}`
+          : data.error || "Error al comparar.";
+        return;
+      }
+      renderCompareResult(data);
+    } catch (err) {
+      compareResult.textContent = `Error: ${err.message}`;
+    }
+  });
+}
 
 manuscriptsList.addEventListener("click", async (event) => {
   const analyzeBtn = event.target.closest(".analyze-btn");

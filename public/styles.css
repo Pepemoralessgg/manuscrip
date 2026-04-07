@@ -420,3 +420,137 @@ a.pdf-link {
   font-weight: 700;
   color: #3b5cff;
 }
+
+/* Flujo PDF: stepper, arrastre, comparación */
+body.page-app .stepper {
+  margin: 1rem 0 0;
+  padding: 0.75rem 1rem;
+  background: rgba(255, 255, 255, 0.55);
+  border: 1px solid rgba(92, 77, 66, 0.12);
+  border-radius: 10px;
+}
+
+body.page-app .stepper-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.25rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.88rem;
+  color: #4a433c;
+}
+
+body.page-app .stepper-list li {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+body.page-app .step-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 50%;
+  background: #6b4f3a;
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+body.page-app .drop-zone {
+  margin: 0.75rem 0 1rem;
+  padding: 1rem 1.1rem;
+  border: 2px dashed rgba(92, 77, 66, 0.35);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.6);
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+body.page-app .drop-zone.drop-zone-active {
+  border-color: #6b4f3a;
+  background: rgba(107, 79, 58, 0.08);
+}
+
+body.page-app .drop-zone-label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 0.35rem;
+}
+
+body.page-app .drop-zone-hint {
+  margin: 0.5rem 0 0;
+  font-size: 0.9rem;
+  color: #6b5e54;
+}
+
+body.page-app .eta-line {
+  margin: 0 0 0.5rem;
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+
+body.page-app .compare-card {
+  border-left: 4px solid #6b4f3a;
+}
+
+body.page-app .compare-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 0.75rem 1rem;
+  align-items: end;
+  margin-bottom: 0.75rem;
+}
+
+@media (max-width: 720px) {
+  body.page-app .compare-row {
+    grid-template-columns: 1fr;
+  }
+
+  body.page-app .compare-btn {
+    width: 100%;
+  }
+}
+
+body.page-app .compare-row label {
+  margin-bottom: 0;
+}
+
+body.page-app .compare-row select {
+  width: 100%;
+  margin-top: 0.35rem;
+}
+
+body.page-app .compare-btn {
+  width: auto;
+  padding: 0.55rem 1rem;
+  background: #6b4f3a;
+  margin-top: 0;
+}
+
+body.page-app .compare-btn:hover:not(:disabled) {
+  background: #4d3929;
+}
+
+body.page-app .compare-result {
+  min-height: 2rem;
+  padding: 0.75rem 1rem;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(92, 77, 66, 0.12);
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+body.page-app .compare-h4 {
+  margin: 0.75rem 0 0.35rem;
+  font-size: 1rem;
+  font-family: "Crimson Pro", Georgia, serif;
+}
+
+body.page-app .compare-ul {
+  margin: 0;
+  padding-left: 1.2rem;
+}

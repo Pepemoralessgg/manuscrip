@@ -29,9 +29,18 @@
           </div>
           <div id="userBar" class="user-bar" aria-live="polite"></div>
         </div>
+        <nav class="stepper" aria-label="Pasos del flujo (propuesta de producto)">
+          <ol class="stepper-list">
+            <li><span class="step-num">1</span> Subir y contexto</li>
+            <li><span class="step-num">2</span> Configuración</li>
+            <li><span class="step-num">3</span> Análisis (puede tardar)</li>
+            <li><span class="step-num">4</span> Dashboard e informe</li>
+            <li><span class="step-num">5</span> Comparar versiones</li>
+          </ol>
+        </nav>
         <p class="muted flow-hint">
-          <strong>Flujo:</strong> 1) Subir y contexto · 2) Análisis (puede tardar) · 3) Dashboard e informe PDF ·
-          4) Iterar entre versiones.
+          Puedes cerrar la pestaña durante el análisis largo y volver más tarde (notificación por email en el
+          roadmap).
           <a class="inline-link" href="/auth">Cuenta / acceso</a>
         </p>
       </header>
@@ -39,7 +48,7 @@
       <section class="card card-elevated">
         <h2>Paso 1 — Manuscrito y contexto</h2>
         <p class="muted small-print">
-          Género y público personalizan el tono del informe y el benchmark (propuesta de producto v1).
+          Género y público personalizan el tono del informe. Arrastra el archivo o elige uno (DOCX, TXT o PDF).
         </p>
         <form id="uploadForm">
           <div class="grid">
@@ -58,18 +67,30 @@
           </div>
 
           <label>
-            Objetivo del análisis
+            Objetivo del análisis (paso 2)
+            <select id="goalPreset">
+              <option value="">— Elige uno o escribe abajo —</option>
+              <option value="Mejorar antes de publicar">Mejorar antes de publicar</option>
+              <option value="Preparar envío a agencias o editoriales">Preparar envío a agencias o editoriales</option>
+              <option value="Feedback rápido sobre el borrador">Feedback rápido sobre el borrador</option>
+            </select>
+          </label>
+          <label>
+            Detalle u objetivos adicionales (opcional)
             <textarea
               name="goals"
               rows="3"
-              placeholder="Ej.: mejorar ritmo antes de autopublicar · preparar envío a agencias · feedback rápido"
+              placeholder="Notas para personalizar benchmark e informe…"
             ></textarea>
           </label>
 
-          <label>
-            Archivo (DOCX, TXT o PDF)
-            <input type="file" name="manuscript" accept=".docx,.txt,.pdf" required />
-          </label>
+          <div id="dropZone" class="drop-zone">
+            <label class="drop-zone-label">
+              Archivo del manuscrito
+              <input type="file" name="manuscript" accept=".docx,.txt,.pdf" required />
+            </label>
+            <p class="drop-zone-hint">Suelta aquí o haz clic para elegir · máx. ~50 MB</p>
+          </div>
 
           <button id="uploadBtn" type="submit">Procesar manuscrito</button>
           <p id="uploadStatus" class="status"></p>
@@ -82,14 +103,38 @@
       </section>
 
       <section class="card">
-        <h2>Tus versiones</h2>
+        <h2>Paso 3 — Tus versiones</h2>
+        <p class="muted small-print">
+          Tiempo orientativo: análisis por capítulos según longitud (p. ej. ~5–45 min). Manuscrip económico ~1–5 min;
+          completo puede tardar mucho más.
+        </p>
         <button id="refreshBtn" type="button">Actualizar listado</button>
         <p id="listStatus" class="status"></p>
         <div id="manuscriptsList"></div>
       </section>
 
+      <section class="card compare-card" id="compareCard">
+        <h2>Paso 5 — Comparar versiones</h2>
+        <p class="muted small-print">
+          Selecciona dos cargas tuyas para ver el diff de métricas (palabras, scores IA, NLP). Roadmap: diff
+          automático al subir “versión 2”.
+        </p>
+        <div class="compare-row">
+          <label>
+            Versión A
+            <select id="compareA"></select>
+          </label>
+          <label>
+            Versión B
+            <select id="compareB"></select>
+          </label>
+          <button type="button" id="compareBtn" class="compare-btn">Comparar</button>
+        </div>
+        <div id="compareResult" class="compare-result"></div>
+      </section>
+
       <section class="card manuscrip-report-card" id="manuscripDashboard" hidden>
-        <h2>Informe Manuscrip</h2>
+        <h2>Paso 4 — Informe Manuscrip (dashboard)</h2>
         <p class="muted">
           Capa 1 (NLP) + capa 2 (IA): estructura, personas, hook, sinopsis, inconsistencias y benchmark. Modo
           <strong>económico</strong> = 1 llamada API + NLP local; modo <strong>completo</strong> = más profundidad

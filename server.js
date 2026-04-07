@@ -469,6 +469,90 @@ function sanitizeManuscript(manuscript) {
   };
 }
 
+/** Score 0–100 → 0–10 (1 decimal), según propuesta de producto */
+function scoreTo10(n) {
+  if (n == null || Number.isNaN(Number(n))) return null;
+  return Math.round((Number(n) / 10) * 10) / 10;
+}
+
+function buildCompareResponse(m1, m2) {
+  const la1 = m1.latestAnalysis?.dimensions;
+  const la2 = m2.latestAnalysis?.dimensions;
+  const n1 = m1.nlpMetrics?.global;
+  const n2 = m2.nlpMetrics?.global;
+
+  const iaDimensions =
+    la1 && la2
+      ? {
+          overall: {
+            a: la1.overallScore,
+            b: la2.overallScore,
+            delta: la2.overallScore - la1.overallScore,
+            on10: { a: scoreTo10(la1.overallScore), b: scoreTo10(la2.overallScore) }
+          },
+          ritmo: {
+            a: la1.ritmoScore,
+            b: la2.ritmoScore,
+            delta: la2.ritmoScore - la1.ritmoScore
+          },
+          claridad: {
+            a: la1.claridadScore,
+            b: la2.claridadScore,
+            delta: la2.claridadScore - la1.claridadScore
+          },
+          estructura: {
+            a: la1.estructuraScore,
+            b: la2.estructuraScore,
+            delta: la2.estructuraScore - la1.estructuraScore
+          }
+        }
+      : null;
+
+  let nlp = null;
+  if (n1 && n2) {
+    nlp = {
+      fleschSzigrisztLike: {
+        a: n1.fleschSzigrisztLike,
+        b: n2.fleschSzigrisztLike,
+        delta: n2.fleschSzigrisztLike - n1.fleschSzigrisztLike
+      },
+      fillerHits: {
+        a: n1.fillerHits,
+        b: n2.fillerHits,
+        delta: n2.fillerHits - n1.fillerHits
+      },
+      longSentenceRatio: {
+        a: n1.longSentenceRatio,
+        b: n2.longSentenceRatio,
+        delta: n2.longSentenceRatio - n1.longSentenceRatio
+      }
+    };
+  }
+
+  return {
+    a: {
+      id: m1.id,
+      title: m1.title,
+      wordCount: m1.wordCount,
+      chapterCount: m1.chapterCount,
+      updatedAt: m1.updatedAt
+    },
+    b: {
+      id: m2.id,
+      title: m2.title,
+      wordCount: m2.wordCount,
+      chapterCount: m2.chapterCount,
+      updatedAt: m2.updatedAt
+    },
+    summary: {
+      wordCountDelta: m2.wordCount - m1.wordCount,
+      chapterCountDelta: m2.chapterCount - m1.chapterCount
+    },
+    iaDimensions,
+    nlp
+  };
+}
+
 app.post("/api/evaluate", async (req, res) => {
   try {
     const { title, genre, audience, excerpt, goals } = req.body || {};
@@ -569,6 +653,32 @@ app.get("/api/manuscripts", async (req, res) => {
   } catch (err) {
     return res.status(500).json({
       error: "No se pudo cargar la lista de manuscritos.",
+      details: err.message
+    });
+  }
+});
+
+/** Paso 5 del PDF: diff de métricas entre dos versiones del mismo usuario */
+app.get("/api/manuscripts/compare", async (req, res) => {
+  try {
+    const userId = await requireUserOrDefault(req, res);
+    if (!userId) return;
+    const a = String(req.query.a || "").trim();
+    const b = String(req.query.b || "").trim();
+    if (!a || !b || a === b) {
+      return res.status(400).json({
+        error: "Indica dos manuscritos distintos (parámetros a y b)."
+      });
+    }
+    const m1 = await getManuscript(userId, a);
+    const m2 = await getManuscript(userId, b);
+    if (!m1 || !m2) {
+      return res.status(404).json({ error: "Uno o ambos manuscritos no existen." });
+    }
+    return res.json(buildCompareResponse(m1, m2));
+  } catch (err) {
+    return res.status(500).json({
+      error: "No se pudo comparar.",
       details: err.message
     });
   }
