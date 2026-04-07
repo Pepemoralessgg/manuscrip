@@ -1,6 +1,8 @@
 /**
  * Cliente Supabase y fetch con JWT — solo APIs del navegador (sin require / CommonJS).
  */
+import { buildScoreHintParts } from "./scoreHints.mjs";
+
 let __sbClientPromise = null;
 
 async function getSupabaseBrowser() {
@@ -183,6 +185,105 @@ function escapeHtml(value) {
     .replace(/'/g, "&#39;");
 }
 
+function scoreHintParagraph(dim, raw) {
+  const p = buildScoreHintParts(dim, raw);
+  if (!p) return "";
+  return `<p class="score-hint muted"><strong>${escapeHtml(p.label)} ${p.n}/100</strong> — ${escapeHtml(p.nivel)}. ${escapeHtml(
+    p.tip
+  )} ${escapeHtml(p.optimal)}</p>`;
+}
+
+function structureTriRow(label, value) {
+  const v = String(value ?? "")
+    .trim()
+    .toLowerCase();
+  let cls = "structure-row structure-uncertain";
+  let sym = "?";
+  if (v === "sí" || v === "si" || v === "yes") {
+    cls = "structure-row structure-yes";
+    sym = "✓";
+  } else if (v === "no") {
+    cls = "structure-row structure-no";
+    sym = "✗";
+  }
+  return `<li class="${cls}"><span class="structure-ico" aria-hidden="true">${sym}</span><div><strong>${escapeHtml(
+    label
+  )}</strong> <span class="structure-val">${escapeHtml(String(value ?? "—"))}</span></div></li>`;
+}
+
+function renderEstructuraHtml(struct) {
+  if (!struct || typeof struct !== "object") {
+    return "<p>No hay evaluación estructural.</p>";
+  }
+  const ta = struct.tresActos;
+  const stc = struct.saveTheCat;
+  const vh = struct.viajeDelHeroe;
+  const pri = Array.isArray(struct.prioridades) ? struct.prioridades : [];
+  const parts = [];
+
+  if (ta && typeof ta === "object") {
+    parts.push(`<h4 class="structure-h4">Tres actos</h4><ul class="structure-checks">`);
+    parts.push(structureTriRow("Conflicto antes del ~12%", ta.conflictoAntesDel12Porciento));
+    parts.push(structureTriRow("Punto de no retorno (~50–60%)", ta.puntoDeNoRetorno50a60));
+    parts.push(structureTriRow("Todo está perdido antes del clímax", ta.todoEstaPerdidoAntesClimax));
+    parts.push(`</ul>`);
+    if (ta.comentario) {
+      parts.push(`<div class="structure-narrative">${escapeHtml(ta.comentario)}</div>`);
+    }
+  }
+
+  if (stc && typeof stc === "object") {
+    parts.push(`<h4 class="structure-h4">Save the Cat (referencia)</h4>`);
+    if (stc.comentario) {
+      parts.push(`<div class="structure-narrative">${escapeHtml(stc.comentario)}</div>`);
+    }
+    const beats = Array.isArray(stc.beatsDetectados) ? stc.beatsDetectados : [];
+    const huecos = Array.isArray(stc.huecos) ? stc.huecos : [];
+    parts.push(`<h5 class="structure-h5">Beats detectados</h5>`);
+    parts.push(
+      beats.length
+        ? `<ul class="structure-list">${beats.map((b) => `<li>${escapeHtml(b)}</li>`).join("")}</ul>`
+        : "<p class=\"muted\">Ninguno listado.</p>"
+    );
+    parts.push(`<h5 class="structure-h5">Huecos detectados</h5>`);
+    parts.push(
+      huecos.length
+        ? `<ul class="structure-gaps">${huecos.map((h) => `<li>${escapeHtml(h)}</li>`).join("")}</ul>`
+        : "<p class=\"muted\">Ninguno listado.</p>"
+    );
+  }
+
+  if (vh && typeof vh === "object") {
+    parts.push(`<h4 class="structure-h4">Viaje del héroe</h4>`);
+    parts.push(`<p><strong>Alineación:</strong> ${escapeHtml(vh.alineacion || "—")}</p>`);
+    if (vh.comentario) {
+      parts.push(`<div class="structure-narrative">${escapeHtml(vh.comentario)}</div>`);
+    }
+  }
+
+  if (pri.length) {
+    parts.push(`<h4 class="structure-h4">Prioridades</h4><ol class="structure-priorities">${pri
+      .map((p) => `<li>${escapeHtml(p)}</li>`)
+      .join("")}</ol>`);
+  }
+
+  if (!parts.length) {
+    return "<p>No hay datos estructurales reconocibles.</p>";
+  }
+  return parts.join("");
+}
+
+function renderBenchmarkHtml(bench) {
+  const note =
+    bench && typeof bench.note === "string" && bench.note.trim()
+      ? bench.note.trim()
+      : "Próximamente: benchmark contra catálogo real de referencia.";
+  return `
+    <p class="benchmark-upcoming-msg">${escapeHtml(note)}</p>
+    <p class="muted">No mostramos cifras comparativas inventadas. Cuando haya un catálogo real, verás aquí la comparación con obras de referencia.</p>
+  `;
+}
+
 function renderLatest(manuscript) {
   const chapterPreview = manuscript.chapters
     .slice(0, 5)
@@ -269,7 +370,9 @@ function renderAnalysis(manuscript, analysis) {
       (c) => `
       <div class="chapter-analysis">
         <h4>${c.index}. ${escapeHtml(c.title)}</h4>
-        <p><strong>Ritmo:</strong> ${c.ritmoScore} | <strong>Claridad:</strong> ${c.claridadScore} | <strong>Estructura:</strong> ${c.estructuraScore}</p>
+        ${scoreHintParagraph("ritmo", c.ritmoScore)}
+        ${scoreHintParagraph("claridad", c.claridadScore)}
+        ${scoreHintParagraph("estructura", c.estructuraScore)}
         <p>${escapeHtml(c.resumenCapitulo || "Sin resumen.")}</p>
       </div>
     `
@@ -279,13 +382,10 @@ function renderAnalysis(manuscript, analysis) {
   latestResult.innerHTML = `
     <p><strong>Título:</strong> ${escapeHtml(manuscript.title)}</p>
     <p><strong>Modelo:</strong> ${escapeHtml(analysis.model)}</p>
-    <p><strong>Score global:</strong> ${analysis.dimensions.overallScore}/100</p>
-    <p>
-      <strong>Dimensiones:</strong>
-      Ritmo ${analysis.dimensions.ritmoScore} |
-      Claridad ${analysis.dimensions.claridadScore} |
-      Estructura ${analysis.dimensions.estructuraScore}
-    </p>
+    ${scoreHintParagraph("overall", analysis.dimensions.overallScore)}
+    ${scoreHintParagraph("ritmo", analysis.dimensions.ritmoScore)}
+    ${scoreHintParagraph("claridad", analysis.dimensions.claridadScore)}
+    ${scoreHintParagraph("estructura", analysis.dimensions.estructuraScore)}
     <h3>Análisis por capítulo</h3>
     ${chapters}
   `;
@@ -336,7 +436,13 @@ function renderManuscripDashboard(m) {
     <p><strong>Palabras:</strong> ${m.wordCount} · <strong>Capítulos:</strong> ${m.chapterCount}</p>
     ${
       la
-        ? `<p><strong>Score global IA:</strong> ${la.dimensions.overallScore}/100 (Ritmo ${la.dimensions.ritmoScore}, Claridad ${la.dimensions.claridadScore}, Estructura ${la.dimensions.estructuraScore})</p>`
+        ? `<div class="score-hint-block">
+      <p><strong>Scores IA (resumen)</strong></p>
+      ${scoreHintParagraph("overall", la.dimensions.overallScore)}
+      ${scoreHintParagraph("ritmo", la.dimensions.ritmoScore)}
+      ${scoreHintParagraph("claridad", la.dimensions.claridadScore)}
+      ${scoreHintParagraph("estructura", la.dimensions.estructuraScore)}
+    </div>`
         : "<p>Sin análisis por capítulo todavía.</p>"
     }
     <p><a href="#" class="pdf-link" data-id="${escapeHtml(m.id)}">Descargar informe PDF</a></p>
@@ -377,16 +483,16 @@ function renderManuscripDashboard(m) {
             (c) => `
         <div class="chapter-analysis">
           <h4>${c.index}. ${escapeHtml(c.title)}</h4>
-          <p><strong>Ritmo:</strong> ${c.ritmoScore} | <strong>Claridad:</strong> ${c.claridadScore} | <strong>Estructura:</strong> ${c.estructuraScore}</p>
+          ${scoreHintParagraph("ritmo", c.ritmoScore)}
+          ${scoreHintParagraph("claridad", c.claridadScore)}
+          ${scoreHintParagraph("estructura", c.estructuraScore)}
           <p>${escapeHtml(c.resumenCapitulo || "")}</p>
         </div>`
           )
           .join("")
       : "<p>No hay análisis por capítulo.</p>";
 
-  const estructuraHtml = mc.structure
-    ? `<pre class="json-block">${escapeHtml(JSON.stringify(mc.structure, null, 2))}</pre>`
-    : "<p>No hay evaluación estructural.</p>";
+  const estructuraHtml = mc.structure ? renderEstructuraHtml(mc.structure) : "<p>No hay evaluación estructural.</p>";
 
   const personasHtml =
     mc.personas && Array.isArray(mc.personas.personas)
@@ -395,7 +501,11 @@ function renderManuscripDashboard(m) {
             (p) => `
         <div class="chapter-analysis">
           <h4>${escapeHtml(p.rol || "persona")}</h4>
-          <p><strong>Abandono estimado:</strong> ${escapeHtml(p.puntoAbandono || "—")} · <strong>Estrellas:</strong> ${p.estrellasAmazon ?? "—"}</p>
+          <p><strong>Punto de abandono:</strong> ${escapeHtml(p.puntoAbandono || p.punto_abandono || "—")}</p>
+          <p><strong>Motivo (si aplica):</strong> ${escapeHtml(
+            p.motivoAbandono != null ? p.motivoAbandono : p.motivo_abandono != null ? p.motivo_abandono : "—"
+          )}</p>
+          <p><strong>Estrellas (simulado):</strong> ${p.estrellasAmazon ?? "—"}</p>
           <p>${escapeHtml(p.feedback || "")}</p>
         </div>`
           )
@@ -439,12 +549,7 @@ function renderManuscripDashboard(m) {
           .join("")}</ul><p><strong>Riesgo:</strong> ${escapeHtml(mc.inconsistencies.riesgo || "—")}</p>`
       : "<p>No hay alertas de inconsistencias.</p>";
 
-  const benchHtml = mc.benchmark
-    ? `
-    <p class="muted">${escapeHtml(mc.benchmark.note || "")}</p>
-    <pre class="json-block">${escapeHtml(JSON.stringify(mc.benchmark, null, 2))}</pre>
-  `
-    : "<p>No hay benchmark.</p>";
+  const benchHtml = mc.benchmark ? renderBenchmarkHtml(mc.benchmark) : "<p>No hay benchmark.</p>";
 
   dashboardBody.innerHTML = `
     <div id="panel-resumen" class="tab-panel active">${resumenHtml}</div>

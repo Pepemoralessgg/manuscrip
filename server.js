@@ -17,6 +17,7 @@ const {
   mapEcoResponseToStored
 } = require("./lib/manuscripIa");
 const { generateManuscriptPdf } = require("./lib/pdfReport");
+const { splitIntoChapters } = require("./lib/chapterSplit");
 const {
   resolveUserId,
   listManuscripts,
@@ -76,42 +77,6 @@ async function requireUserOrDefault(req, res) {
     return null;
   }
   return userId;
-}
-
-function splitIntoChapters(text) {
-  const normalized = text.replace(/\r\n/g, "\n").trim();
-  if (!normalized) return [];
-
-  const chapterRegex =
-    /(?:^|\n)\s*(chapter|cap[ií]tulo)\s+([0-9ivxlcdm]+)\b[^\n]*/gim;
-  const matches = [...normalized.matchAll(chapterRegex)];
-  if (!matches.length) {
-    return [
-      {
-        title: "Texto completo",
-        content: normalized
-      }
-    ];
-  }
-
-  const chapters = [];
-  for (let i = 0; i < matches.length; i += 1) {
-    const start = matches[i].index || 0;
-    const end = i < matches.length - 1 ? matches[i + 1].index : normalized.length;
-    const content = normalized.slice(start, end).trim();
-    if (content) {
-      const line = content.split("\n")[0].trim();
-      chapters.push({ title: line || `Capítulo ${i + 1}`, content });
-    }
-  }
-  return chapters.length
-    ? chapters
-    : [
-        {
-          title: "Texto completo",
-          content: normalized
-        }
-      ];
 }
 
 function countWords(text) {
